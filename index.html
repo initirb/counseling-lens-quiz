@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Which Counseling Lens Fits You?</title>
+<style>
+:root{--bg:#faf8f5;--card:#fff;--tx:#2a2622;--mu:#6d655c;--bd:#e3ddd4;--ac:#3d6a8a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1917;--card:#262321;--tx:#eee9e2;--mu:#a69d92;--bd:#3a3632;--ac:#7fb0d0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1b1917;--card:#262321;--tx:#eee9e2;--mu:#a69d92;--bd:#3a3632;--ac:#7fb0d0;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 Georgia,'Times New Roman',serif}
+main{max-width:680px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.6rem;margin:.2em 0}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px}
+.mu{color:var(--mu)}
+button{font:inherit;cursor:pointer}
+.go{background:var(--ac);color:var(--bg);border:0;border-radius:10px;padding:12px 22px;font-size:1rem;margin-top:12px}
+.opt{display:block;width:100%;text-align:left;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:13px 14px;margin:10px 0;line-height:1.45}
+.opt:hover,.opt.sel{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 14%,var(--bg))}
+.bar{height:6px;background:var(--bd);border-radius:3px;margin:8px 0 18px}
+.bar i{display:block;height:100%;background:var(--ac);border-radius:3px}
+.back{background:none;border:0;color:var(--mu);padding:6px 0;margin-top:6px}
+.row{display:flex;gap:10px;align-items:flex-start;margin:14px 0}
+.dot{width:14px;height:14px;border-radius:4px;flex:none;margin-top:5px}
+.pct{font-weight:bold;white-space:nowrap}
+svg{display:block;margin:10px auto;max-width:300px;width:100%}
+</style></head><body><main id="app"></main>
+<script>
+const L={
+P:["Psychoanalytic / Psychodynamic","#b5547a","Focuses on unconscious conflicts, early relationships, and defenses. Current struggles are seen as echoes of the past, and insight is central."],
+B:["Behavioral","#d98a2b","Focuses on observable behavior and how it is learned and maintained by triggers and consequences. Change comes from altering the environment and building new skills."],
+C:["Cognitive","#4a8f6a","Focuses on how interpretations, beliefs, and automatic thoughts shape emotions and actions. Distress often comes from distorted or unhelpful thinking."],
+H:["Humanistic (Person-Centered)","#e0b43c","Trusts the client’s innate drive toward growth. Empathy, genuineness, and unconditional positive regard create the conditions for change."],
+F:["Family Systems","#7a6bb5","Views people within their relational systems. Symptoms reflect family roles, boundaries, and patterns, often across generations."],
+A:["Adlerian","#c9604a","Sees behavior as purposeful and social. Distress comes from discouragement, feelings of inferiority, and mistaken goals; belonging and encouragement drive growth."],
+E:["Existential","#3d7ea6","Centers on freedom, responsibility, isolation, mortality, and meaning. Anxiety is a natural response to the givens of existence."],
+G:["Gestalt","#6a9a3a","Emphasizes present-moment awareness, body experience, and unfinished business. Growth comes from fuller contact with what is happening now."]};
+// Each item: [shared prompt, set one, set two]. Sets are complementary so every lens appears in 25 questions.
+const D=[
+["A client says, “I can’t stop worrying, and I’m exhausted.” Which question would you ask next?",
+{P:"What do you think the worry might be covering up, something you’d rather not feel or face?",B:"When does the worry happen most, and what do you do right after it starts?",C:"What exactly do you tell yourself during the worry? What are you predicting will happen?",H:"It sounds like you’re really worn down. What is the exhaustion like for you right now?"},
+{F:"Who else in your household notices the worry, and how do they respond?",A:"What does worrying let you do, or avoid doing, that matters to you?",E:"What does the worry tell you about what’s at stake in your life?",G:"As you say that, what do you notice in your body? Where do you feel the worry?"}],
+["Which do you believe is the main cause of a person’s struggles?",
+{P:"Unresolved conflicts and painful experiences from early life that operate outside awareness.",F:"Patterns, roles, and unspoken rules passed through the family system.",E:"Avoiding the anxiety of freedom, responsibility, and creating meaning.",B:"Habits learned and kept going by what follows them in the environment."},
+{C:"Unhelpful beliefs and interpretations that distort how a person sees events.",H:"Being cut off from their own feelings by others’ conditions for approval.",A:"Discouragement and feeling “less than,” leading to mistaken goals and less belonging.",G:"Unfinished business and avoiding what they feel in the present moment."}],
+["A college student keeps putting off a paper. What would you most want to explore?",
+{P:"What the paper may symbolize emotionally, and whether it echoes an old fear about someone’s expectations.",A:"What the delay accomplishes for them and where they feel they stand among their peers.",G:"What they feel in their body at the moment they think about starting.",C:"The thoughts that pop up when they sit down, like “It won’t be good enough.”"},
+{B:"The time, place, and steps around starting, and what follows when they stop.",H:"How it feels to carry this pressure, with no judgment about the delay.",F:"What their family expects academically and how they react to grades.",E:"Whether this path is truly their own choice and what it means to them."}],
+["Which statement best describes how people change?",
+{P:"People change when they gain insight into unconscious patterns and work through them.",H:"People change when they feel deeply accepted and understood, which frees them to grow.",E:"People change when they face their freedom and take responsibility for creating meaning.",F:"People change when the patterns of relationships around them shift."},
+{B:"People change by practicing new behaviors that lead to new consequences.",C:"People change when they spot and test the thoughts driving their feelings.",A:"People change when they’re encouraged and rediscover courage and connection to others.",G:"People change when they become fully aware of what they’re experiencing right now."}],
+["A client’s father recently died, and they say, “I should be over this by now.” Which would you ask?",
+{P:"How might this loss connect to earlier losses, or to feelings about him that have been hard to face?",C:"Where does that “should” come from? What do you believe grief is supposed to look like?",E:"What has this loss shown you about life, time, and what matters most?",G:"If your father were sitting in that chair, what would you want to say to him?"},
+{B:"What have your days looked like lately: sleep, eating, and what you’ve stopped doing?",H:"That sounds heavy, and it sounds like you’re judging yourself while hurting. What is the grief like?",F:"How is your family grieving, and how are roles shifting now that he’s gone?",A:"How has this loss affected your sense of belonging and your courage to move forward?"}],
+["Which description of the counselor’s role appeals to you most?",
+{P:"An interpreter who helps clients see what’s hidden beneath their words and reactions.",B:"A coach who helps clients set clear goals and practice new skills.",A:"An encourager who helps clients regain courage and connect with others.",E:"A companion who helps clients face life’s big questions honestly."},
+{C:"A guide who helps clients question and test their own thinking.",H:"A warm, genuine presence who accepts clients as they are.",F:"An observer who maps relational patterns and helps the whole system shift.",G:"An experimenter who invites clients to notice and try things in the moment."}],
+["A client says, “I always end up in fights with coworkers.” Which question would you ask?",
+{P:"Do these coworkers stir up feelings that seem familiar from much earlier in your life?",H:"It sounds painful to keep ending up here. What is it like for you in those moments?",A:"What do you get out of the fight, and how do you want to be seen by your coworkers?",G:"Right now, as you tell me about it, what are you feeling in your chest or hands?"},
+{B:"What happens just before a conflict starts, and what happens right after it ends?",C:"What do you assume your coworkers mean by what they say or do?",F:"How were disagreements handled in your family, and what role did you play?",E:"What do these fights say about what you’re protecting or standing for?"}],
+["A case file describes a man with frequent angry outbursts. Which detail would you most want to learn?",
+{P:"His earliest memories of his parents and how anger was treated at home.",B:"How often outbursts occur, where, and what typically follows them.",F:"What his family system looks like and who tends to be the target.",G:"What he’s aware of, or numbs, in his body just before he explodes."},
+{C:"The thoughts and beliefs he has about other people’s intentions.",H:"How he experiences himself and whether he feels truly heard by anyone.",A:"What he’s striving for, and whether he feels inferior or powerless.",E:"Whether he feels his life has a meaning and direction he has chosen."}],
+["Which statement about therapy rings truest for you?",
+{P:"The past lives on in the present, often without our knowing it.",H:"The relationship between counselor and client is what heals.",E:"The deepest struggles are about meaning, mortality, and freedom.",G:"Awareness of the here and now matters more than analyzing why."},
+{B:"What can’t be observed and measured is less useful to work on.",C:"Our interpretations of events matter more than the events themselves.",F:"No one can be understood apart from the people around them.",A:"Everyone wants to belong and feel significant, and behavior serves that goal."}],
+["A client says, “I feel like a fraud at my new job.” Which question would you ask?",
+{P:"When was the earliest time you remember feeling you were hiding your real self?",C:"What evidence do you have for and against the idea that you’re a fraud?",A:"Compared to whom do you feel less than, and what would you do if you felt you belonged?",F:"What messages did your family give about success and who in the family “made it”?"},
+{B:"When do these feelings show up, and what do you do to cope in those moments?",H:"That sounds really uncomfortable. What’s it like to feel like you’re pretending?",E:"Are you living out your own idea of success or someone else’s?",G:"Which part of you feels like the fraud? Could you give that part a voice here?"}],
+["A couple says they argue constantly. What would you focus on first?",
+{P:"Old relational patterns each partner may be replaying from childhood.",B:"How arguments start, escalate, and end, and teaching new communication skills.",H:"Giving each partner space to feel heard and understood.",A:"What each partner is aiming for in the conflict and how to build mutual encouragement."},
+{C:"The assumptions each partner makes about the other’s intentions.",F:"The cycle the couple, and perhaps their families, keep repeating.",E:"Whether each is being authentic and owning their choices in the relationship.",G:"What each partner feels and avoids as the argument unfolds, right in the room."}],
+["A client avoids social events. Which question would you ask?",
+{P:"What might you be protecting yourself from, and when did that protection first begin?",C:"What thoughts go through your mind when you get an invitation?",H:"It sounds lonely and tiring. What is this like for you?",E:"What are you giving up in your life by staying away, and is that your choice?"},
+{B:"How many events have you gone to lately, and what would be a small first step?",F:"How did your family socialize, and does anyone else in your family avoid people?",A:"How do you see yourself compared to others, and where might you feel you belong?",G:"Imagine walking into a party right now. What do you notice in your body?"}],
+["How do you view a client’s symptoms, such as panic attacks?",
+{P:"A signal of buried conflict trying to surface.",E:"A signal of anxiety about freedom, meaning, or mortality.",F:"A signal of stress in the family, perhaps even serving a role in it.",A:"A signal of discouragement that serves a purpose in how the person moves through life."},
+{B:"A learned response strengthened by specific triggers and consequences.",C:"A result of catastrophic interpretations of normal body sensations.",H:"A sign the person has lost touch with their own feelings and needs.",G:"A sign of something the person is avoiding experiencing in the moment."}],
+["In a first session with a burned-out nurse, what would you most want to do?",
+{P:"Let her talk freely and listen for recurring themes and how she relates to me.",B:"Define specific, measurable goals and track her sleep, hours, and stress triggers.",E:"Explore what her work means to her and what she wants her life to stand for.",G:"Invite her to notice her body and what she feels as she describes her day."},
+{C:"Identify the beliefs fueling her exhaustion, like “I must never say no.”",H:"Offer warm, nonjudgmental listening so she feels fully accepted.",F:"Learn who depends on her at home and at work and how they respond to her.",A:"Understand how she sees her role, and encourage her strengths and contributions."}],
+["A teen says, “My parents just don’t understand me.” Which question would you ask?",
+{P:"What feelings come up in you toward them that are hard to admit?",C:"What do you think your parents think about you?",F:"What happens at home when you and your parents disagree? Who steps in?",E:"What do you want to be able to choose for yourself that feels out of your hands?"},
+{B:"When do conversations with them go badly, and what does each of you do?",H:"It sounds lonely to feel misunderstood. What is that like for you?",A:"Where in your family do you feel you fit, and what do you want from them?",G:"Say that sentence again, slowly, and notice what you feel as you say it."}],
+["When you think about a client, which question do you most want answered?",
+{P:"What unconscious conflicts and defenses are at work here?",H:"What are they feeling, and what do they need in order to feel accepted?",A:"What are their life goals and sense of belonging?",B:"Which observable behaviors need to change, and what maintains them?"},
+{C:"What thoughts and beliefs are driving their distress?",F:"How does the family system contribute to and respond to the problem?",E:"What meaning, choices, and responsibilities are they facing?",G:"What are they aware of, and what are they avoiding, right now?"}],
+["A client says, “I have to be perfect or I’m worthless.” Which question would you ask?",
+{P:"Whose voice do you hear when you say that, and what happened when you weren’t perfect as a child?",B:"What do you do to avoid mistakes, and what happens when you stop doing it?",C:"What would it mean about you if you made a mistake? Is that always true?",G:"Say “I have to be perfect” again slowly. What do you notice in your body?"},
+{H:"It sounds like you carry a harsh judge inside. What is that like to live with?",F:"Who in your family valued perfection, and what happened when someone fell short?",A:"What do you feel perfection will give you, and compared to whom do you feel less?",E:"What are you giving up of your own life to chase perfection?"}],
+["Which describes how you’d use your relationship with a client?",
+{P:"Notice how they relate to me as a clue to how they related to people in their past.",H:"Offer genuine warmth and empathy as the core of the work.",F:"Stay neutral and avoid being pulled into the family’s patterns or taking sides.",G:"Be present and honest about what I notice between us right now."},
+{B:"Act as a coach, giving feedback and reinforcement as skills grow.",C:"Work together like scientists testing the client’s ideas.",A:"Treat the client as an equal and encourage them.",E:"Be an authentic fellow traveler who respects their freedom to choose."}],
+["A client keeps choosing partners who treat them badly. What would you ask?",
+{P:"Who from your early life do these partners remind you of?",C:"What do you believe about yourself that makes this treatment seem acceptable?",H:"It sounds like you’ve been hurt many times. What do you feel when you think about it?",A:"What do you get from these relationships, and what would belonging in a healthy one look like?"},
+{B:"What are the first signs in each relationship, and what do you do every time?",F:"What did you see between your parents or caregivers as a model for love?",E:"What keeps you choosing this, and what would taking full responsibility look like?",G:"What do you feel toward that person right now? Tell them, as if they were in that chair."}],
+["Which goal would you most want for a client?",
+{P:"Gaining insight into hidden motives so they stop repeating the past.",F:"Healthier boundaries and communication within their family.",H:"Becoming more self-accepting and trusting of their own feelings.",B:"Reducing a specific problem behavior and building replacement skills."},
+{C:"Thinking more flexibly and realistically about themselves and others.",A:"Greater courage, social connection, and contribution to others.",E:"Living more authentically and creating a meaningful life.",G:"Greater present-moment awareness and finishing unfinished business."}],
+["A 45-year-old says, “I feel stuck in my life.” Which question would you ask?",
+{P:"What dreams or desires from earlier in your life might you have buried?",B:"What does a typical week look like, and what daily activities bring any satisfaction?",H:"It sounds like you’re really stuck. What does “stuck” feel like inside?",E:"If you knew your time was limited, what would you change?"},
+{C:"What thoughts tell you that nothing can change?",F:"Who depends on you staying the way you are, and who would be affected if you changed?",A:"What have you wanted to accomplish, and what’s holding back your courage?",G:"Where in your body do you feel stuck? What would that part say if it could speak?"}],
+["Which best captures what drives human behavior?",
+{P:"Unconscious drives and conflicts we aren’t aware of.",C:"The beliefs we hold about ourselves, others, and the world.",B:"Rewards and consequences in our environment.",F:"Our place and role within family and relationships."},
+{H:"An inborn drive toward growth and becoming our true selves.",A:"A striving for significance and belonging.",E:"A search for meaning in the face of freedom and mortality.",G:"A need to complete experiences and make full contact with the present."}],
+["A client says, “I feel invisible to everyone.” Which question would you ask?",
+{P:"When did you first feel unseen, and by whom?",H:"That sounds so painful. I’m here and listening. What is it like to feel invisible?",F:"Where did you stand in your family, and who noticed you there?",E:"What would it mean to be truly seen, and what risks would that involve?"},
+{B:"What do you do in groups, and how do others respond?",C:"What thoughts go through your mind when you’re with friends?",A:"How do you contribute to your friends, and where do you feel you belong?",G:"Try saying “I am invisible” to me, and notice what comes up."}],
+["Which counselor mistake concerns you most?",
+{C:"Letting clients keep believing distorted thoughts without examining them.",H:"Being cold or judgmental and not accepting clients as they are.",E:"Ignoring the client’s search for meaning or personal responsibility.",F:"Treating one person’s problem as if their relationships don’t matter."},
+{P:"Missing the deeper, unconscious meaning behind what a client says.",B:"Failing to define clear, observable goals and track progress.",A:"Discouraging the client or ignoring the purpose behind their choices.",G:"Talking about the past or future when the client’s present experience is right there."}],
+["A parent says, “I keep losing my temper with my kids.” Which question would you ask?",
+{P:"When you lose your temper, who from your own childhood do you sound like?",B:"What happens just before you yell, and what happens afterward for you and the kids?",F:"How do your partner and the rest of the family respond, and how did your parents handle anger?",E:"What kind of parent do you want to be, and what choice are you making each time?"},
+{C:"What do you tell yourself in those moments about your kids’ behavior?",H:"It sounds like you care a lot and feel awful afterward. What is that like for you?",A:"What goal are you pursuing when you yell, and what would encouragement look like instead?",G:"Let’s slow down. What are you feeling in your body right now as you tell me this?"}]
+];
+const Q=D.flatMap(([p,a,b])=>[[p,a],[p,b]]);
+const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const app=document.getElementById('app');let order,ans,i;
+function start(){app.innerHTML=`<h1>Which Counseling Lens Fits You?</h1><div class="card"><p>Fifty questions, four choices each. Pick the one you most identify with, even if none is perfect. The theories behind each answer stay hidden until your results, so go with your gut.</p><p class="mu">Expect a spread. Most counselors blend several lenses, and your pie chart shows your mix.</p><button class="go" id="s">Begin</button></div>`;
+document.getElementById('s').onclick=()=>{order=sh(Q.map((_,k)=>k)).map(k=>({q:Q[k],o:sh(Object.entries(Q[k][1]))}));ans=[];i=0;show()}}
+function show(){const{q,o}=order[i];
+app.innerHTML=`<div class="mu">Question ${i+1} of ${Q.length}</div><div class="bar"><i style="width:${i/Q.length*100}%"></i></div><div class="card"><h2 style="font-size:1.15rem;margin-top:0">${q[0]}</h2>${o.map(([k,t],n)=>`<button class="opt${ans[i]===k?' sel':''}" data-k="${k}"><b>${'ABCD'[n]}.</b> ${t}</button>`).join('')}</div>${i?'<button class="back" id="b">← Back</button>':''}`;
+app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ans[i]=b.dataset.k;b.classList.add('sel');setTimeout(()=>{i++;i<Q.length?show():res()},180)});
+const bb=document.getElementById('b');if(bb)bb.onclick=()=>{i--;show()}}
+function res(){const c={};Object.keys(L).forEach(k=>c[k]=0);ans.forEach(k=>c[k]++);
+const r=Object.keys(L).map(k=>({k,n:c[k],p:c[k]/ans.length})).sort((a,b)=>b.n-a.n);
+let a0=-Math.PI/2,s='';const pt=(a)=>[100+90*Math.cos(a),100+90*Math.sin(a)];
+r.forEach(x=>{if(!x.n)return;if(x.p>=1){s+=`<circle cx="100" cy="100" r="90" fill="${L[x.k][1]}"/>`;return}
+const a1=a0+x.p*2*Math.PI,[x1,y1]=pt(a0),[x2,y2]=pt(a1);
+s+=`<path d="M100 100L${x1} ${y1}A90 90 0 ${x.p>.5?1:0} 1 ${x2} ${y2}Z" fill="${L[x.k][1]}" stroke="var(--card)" stroke-width="1.5"/>`;a0=a1});
+const top=r[0].n,tie=r.filter(x=>x.n===top).map(x=>L[x.k][0]);
+app.innerHTML=`<h1>Your Counseling Lens Profile</h1><div class="card"><svg viewBox="0 0 200 200" role="img" aria-label="Pie chart of your lens percentages">${s}</svg>
+<p style="text-align:center;margin:6px 0 0"><b>Strongest lens${tie.length>1?'es':''}:</b> ${tie.join(' &amp; ')}</p>
+<p class="mu" style="text-align:center;font-size:.9rem">Close scores are normal. Most counselors integrate several lenses.</p></div>
+<div class="card" style="margin-top:14px">${r.map(x=>`<div class="row"><span class="dot" style="background:${L[x.k][1]}"></span><div style="flex:1"><b>${L[x.k][0]}</b><div class="mu" style="font-size:.93rem">${L[x.k][2]}</div></div><span class="pct">${Math.round(x.p*100)}%<span class="mu" style="font-weight:normal;font-size:.8rem"> (${x.n})</span></span></div>`).join('')}</div>
+<button class="go" id="r">Retake the quiz</button>`;
+document.getElementById('r').onclick=start}
+start();
+</script></body></html>
